@@ -1,3 +1,4 @@
+import cors from "cors";
 import express from "express";
 import { config } from "dotenv";
 import auth from "./views/auth.js";
@@ -9,7 +10,12 @@ const PORT = 3000;
 config({
   path: "./.env",
 });
-
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  })
+);
 app.use(cookieParser());
 app.use(express.json());
 
