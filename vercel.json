@@ -1,17 +1,10 @@
 {
-    "version": 2,
-    "builds": [
-      {
-        "src": "./index.js",
-        "use": "@vercel/node",
-        "config": {
-          "includeFiles": ["prisma/**", "node_modules/.prisma/**"]
-        }
-      }
-    ],
-    "routes": [
-      { "src": "/(.*)", "dest": "/" }
-    ],
-    "buildCommand": "npm run build && npx prisma generate"
-  }
-  
+  "version": 2,
+  "builds": [
+    {
+      "src": "./index.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [{ "src": "/(.*)", "dest": "/" }]
+}
