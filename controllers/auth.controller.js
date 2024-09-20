@@ -37,8 +37,8 @@ export const sendOTP = async (req, res) => {
       .cookie("otpsent", otpsent, {
         httpOnly: true,
         maxAge: 15 * 60 * 1000,
+        secure:false,
         sameSite: "none",
-        secure:false
       })
       .json({ success: true, message: "Verification Email sent " });
   } catch (error) {
@@ -66,8 +66,8 @@ export const verifyOTP = async (req, res) => {
       .cookie("verified", verified, {
         httpOnly: true,
         maxAge: 25 * 60 * 1000,
+        secure:false,
         sameSite: "none",
-        secure:false
       })
       .json({
         success: true,
@@ -135,8 +135,8 @@ export const register = async (req, res) => {
       .cookie("authtoken", authtoken, {
         httpOnly: true,
         maxAge: 10 * 24 * 60 * 60 * 1000, // Expires in 10 days
+        secure:false,
         sameSite: "none",
-        secure:false
       })
       .json({
         success: true,
@@ -183,8 +183,8 @@ export const login = async (req, res) => {
       .cookie("authtoken", authtoken, {
         httpOnly: true,
         maxAge: 7 * 24 * 60 * 60 * 1000,
+        secure:false,
         sameSite: "none",
-        secure:false
       })
       .json({ success: true, user });
   } catch (error) {
@@ -228,8 +228,8 @@ export const forgotPassword = async (req, res) => {
       .cookie("resetpasswordtoken", resetPasswordToken, {
         httpOnly: true,
         maxAge: 15 * 60 * 1000,
+        secure:false,
         sameSite: "none",
-        secure:false
       })
       .json({
         success: true,
