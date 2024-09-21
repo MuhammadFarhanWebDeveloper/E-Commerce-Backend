@@ -22,7 +22,7 @@ export const sendOTP = async (req, res) => {
     if (user) {
       return res
         .status(400)
-        .json({ success: true, message: "User already exists" });
+        .json({ success: false, message: "User already exists" });
     }
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const salt = await bcryptjs.genSalt(10);
@@ -35,7 +35,7 @@ export const sendOTP = async (req, res) => {
     const otpsent = jsonwebtoken.sign(payload, process.env.JWT_SECRET);
     res
       .cookie("otpsent", otpsent, {
-        httpOnly: true,
+        
         maxAge: 15 * 60 * 1000,
         secure:true,
         sameSite: "none",
@@ -64,7 +64,7 @@ export const verifyOTP = async (req, res) => {
     const verified = jsonwebtoken.sign(payload, process.env.JWT_SECRET);
     res
       .cookie("verified", verified, {
-        httpOnly: true,
+        
         maxAge: 25 * 60 * 1000,
         secure:true,
         sameSite: "none",
@@ -133,7 +133,7 @@ export const register = async (req, res) => {
     }
     res
       .cookie("authtoken", authtoken, {
-        httpOnly: true,
+        
         maxAge: 10 * 24 * 60 * 60 * 1000, // Expires in 10 days
         secure:true,
         sameSite: "none",
@@ -181,7 +181,7 @@ export const login = async (req, res) => {
     const authtoken = jsonwebtoken.sign(payload, process.env.JWT_SECRET);
     res
       .cookie("authtoken", authtoken, {
-        httpOnly: true,
+        
         maxAge: 7 * 24 * 60 * 60 * 1000,
         secure:true,
         sameSite: "none",
@@ -226,7 +226,7 @@ export const forgotPassword = async (req, res) => {
     res
       .status(200)
       .cookie("resetpasswordtoken", resetPasswordToken, {
-        httpOnly: true,
+        
         maxAge: 15 * 60 * 1000,
         secure:true,
         sameSite: "none",
@@ -330,7 +330,7 @@ export const logout = async (req, res) => {
   try {
     res
       .clearCookie("authtoken", {
-        httpOnly: true,
+        
       })
       .json({ success: true, message: "Successfully Logged out" });
   } catch (error) {
