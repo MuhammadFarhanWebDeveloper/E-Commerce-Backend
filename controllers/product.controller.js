@@ -98,6 +98,7 @@ export const getOneProduct = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
+
 export const getManyProducts = async (req, res) => {
   try {
     const {
@@ -170,6 +171,7 @@ export const getManyProducts = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
+
 export const editProduct = async (req, res) => {
   try {
     const { id } = req.params;
@@ -227,18 +229,19 @@ export const editProduct = async (req, res) => {
 export const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
+    const userId = req.userId; // Assuming you have user ID in the request object
 
+    // Find the product by ID
     const product = await prisma.product.findUnique({
       where: { id: parseInt(id, 10) },
+      include: { images: true }, // Include images to delete them later
     });
 
     if (!product) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Product not found" });
+      return res.status(404).json({ success: false, message: "Product not found" });
     }
 
+    // Check if the logged-in user is the seller of the product
     if (product.sellerId !== userId) {
       return res.status(403).json({
         success: false,
@@ -246,6 +249,16 @@ export const deleteProduct = async (req, res) => {
       });
     }
 
+    // Delete associated images from Cloudinary
+    const deleteImagePromises = product.images.map(async (image) => {
+      const publicId = image.url.split('/').pop().split('.')[0]; // Extract public ID from the URL
+      await cloudinary.uploader.destroy(publicId); // Delete image from Cloudinary
+    });
+
+    // Wait for all images to be deleted
+    await Promise.all(deleteImagePromises);
+
+    // Delete the product from the database
     const deletedProduct = await prisma.product.delete({
       where: { id: parseInt(id, 10) },
     });
@@ -257,11 +270,9 @@ export const deleteProduct = async (req, res) => {
     });
   } catch (error) {
     if (error.code === "P2025") {
-      return res
-        .status(404)
-        .json({ success: false, message: "Product not found" });
+      return res.status(404).json({ success: false, message: "Product not found" });
     }
-
+    console.error(error); // Log the error for debugging
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
@@ -406,7 +417,6 @@ export const addToCart = async (req, res) => {
     });
   }
 };
-
 
 export const removeFromCart = async (req, res) => {
   try {
