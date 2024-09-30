@@ -6,30 +6,43 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-
 }
 
 model User {
-  id                         Int        @id @default(autoincrement())
-  firstName                  String
-  lastName                   String
-  username                   String     @unique @db.VarChar(255)
-  email                      String     @unique
-  password                   String
-  bio                        String?
-  isSeller                   Boolean    @default(false)
-  isAdmin                    Boolean    @default(false)
-  profilePicture             String?
-  address                    String?
-  phoneNumber                String?
-  createdAt                  DateTime   @default(now())
-  updatedAt                  DateTime   @updatedAt
-  products                   Product[]  @relation("UserProducts")
-  orders                     Order[]
-  cartItems                  CartItem[]
-  reviews                    Review[]
-  resetToken                 String?
-  resetTokenExpiresAt        DateTime?
+  id                  Int        @id @default(autoincrement())
+  firstName           String
+  lastName            String?
+  username            String     @unique @db.VarChar(255)
+  email               String     @unique
+  password            String
+  bio                 String?
+  isSeller            Boolean    @default(false)
+  isAdmin             Boolean    @default(false)
+  profilePicture      String?
+  address             String?
+  phoneNumber         String?
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+  seller              Seller?
+  orders              Order[]
+  cartItems           CartItem[]
+  reviews             Review[]
+  resetToken          String?
+  resetTokenExpiresAt DateTime?
+}
+
+model Seller {
+  id               Int       @id @default(autoincrement())
+  userId           Int       @unique 
+  storeName        String
+  storeDescription String?
+  storeLogo        String?
+  businessAddress  String?
+  socialMediaLinks Json?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  user             User      @relation(fields: [userId], references: [id])
+  products         Product[]
 }
 
 model Product {
@@ -41,7 +54,7 @@ model Product {
   categoryId  Int
   category    Category    @relation(fields: [categoryId], references: [id])
   sellerId    Int
-  seller      User        @relation("UserProducts", fields: [sellerId], references: [id])
+  seller      Seller      @relation(fields: [sellerId], references: [id])
   images      Image[]
   reviews     Review[]
   createdAt   DateTime    @default(now())
@@ -49,7 +62,16 @@ model Product {
   OrderItem   OrderItem[]
   CartItem    CartItem[]
 }
-
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
 model Category {
   id          Int       @id @default(autoincrement())
   name        String    @unique
@@ -70,7 +92,7 @@ model Order {
   user       User        @relation(fields: [userId], references: [id])
   totalPrice Float
   status     String
-  payment    Payment? // Adjusted relation
+  payment    Payment? 
   orderItems OrderItem[]
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
@@ -109,13 +131,4 @@ model Review {
   updatedAt DateTime @updatedAt
 }
 
-model CartItem {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  productId Int
-  product   Product  @relation(fields: [productId], references: [id])
-  quantity  Int      @default(1)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now())
-}
+

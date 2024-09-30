@@ -35,10 +35,7 @@ export const sendOTP = async (req, res) => {
     const otpsent = jsonwebtoken.sign(payload, process.env.JWT_SECRET);
     res
       .cookie("otpsent", otpsent, {
-        
         maxAge: 15 * 60 * 1000,
-        secure:true,
-        sameSite: "none",
       })
       .json({ success: true, message: "Verification Email sent " });
   } catch (error) {
@@ -64,10 +61,7 @@ export const verifyOTP = async (req, res) => {
     const verified = jsonwebtoken.sign(payload, process.env.JWT_SECRET);
     res
       .cookie("verified", verified, {
-        
         maxAge: 25 * 60 * 1000,
-        secure:true,
-        sameSite: "none",
       })
       .json({
         success: true,
@@ -115,28 +109,21 @@ export const register = async (req, res) => {
         isAdmin,
       },
     });
-    
 
     const { password: userPassword, ...sendUser } = newUser;
 
     await sendWelcomeEmail(newUser.email, newUser.username);
 
-    
     const payload = {
       email: newUser.email,
       id: newUser.id,
     };
-    
+
     const authtoken = jsonwebtoken.sign(payload, process.env.JWT_SECRET);
-    if (newUser.isSeller) {
-      res.cookie("sellertoken", authtoken)
-    }
+   
     res
       .cookie("authtoken", authtoken, {
-        
         maxAge: 10 * 24 * 60 * 60 * 1000, // Expires in 10 days
-        secure:true,
-        sameSite: "none",
       })
       .json({
         success: true,
@@ -181,10 +168,7 @@ export const login = async (req, res) => {
     const authtoken = jsonwebtoken.sign(payload, process.env.JWT_SECRET);
     res
       .cookie("authtoken", authtoken, {
-        
         maxAge: 7 * 24 * 60 * 60 * 1000,
-        secure:true,
-        sameSite: "none",
       })
       .json({ success: true, user });
   } catch (error) {
@@ -226,10 +210,7 @@ export const forgotPassword = async (req, res) => {
     res
       .status(200)
       .cookie("resetpasswordtoken", resetPasswordToken, {
-        
         maxAge: 15 * 60 * 1000,
-        secure:true,
-        sameSite: "none",
       })
       .json({
         success: true,
@@ -246,6 +227,7 @@ export const forgotPassword = async (req, res) => {
 export const resetPassword = async (req, res) => {
   const { otp, newPassword } = req.body;
   const email = req.userEmail;
+  console.log(`The Email is >> ${email}`);
   try {
     const user = await prisma.user.findUnique({ where: { email } });
 
@@ -277,7 +259,7 @@ export const resetPassword = async (req, res) => {
 
     res
       .status(200)
-      .json({ success: false, message: "Password reset successfully." });
+      .json({ success: true, message: "Password reset successfully." });
   } catch (error) {
     console.log(error);
     res.status(500).json({
@@ -329,10 +311,74 @@ export const getUser = async (req, res) => {
 export const logout = async (req, res) => {
   try {
     res
-      .clearCookie("authtoken", {
-        
-      })
+      .clearCookie("authtoken", {})
       .json({ success: true, message: "Successfully Logged out" });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+export const becomeSeller = async (req, res) => {
+  try {
+    const {
+      storeName,
+      storeDescription,
+      storeLogo,
+      businessAddress,
+      socialMediaLinks,
+    } = req.body;
+    const userId = req.userId;
+
+    if (!storeName) {
+      return res.status(400).json({
+        success: false,
+        message: "Store Name is required",
+      });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    if (user.isSeller) {
+      return res
+        .status(400)
+        .json({ success: false, message: "User is already a seller" });
+    }
+
+    // Create a new seller entry in the Seller table
+    const seller = await prisma.seller.create({
+      data: {
+        userId: userId,
+        storeName: storeName,
+        storeDescription: storeDescription || null,
+        storeLogo: storeLogo || null,
+        businessAddress: businessAddress || null,
+        socialMediaLinks: socialMediaLinks
+          ? JSON.parse(socialMediaLinks)
+          : null,
+      },
+    });
+
+    // Update the user to set `isSeller` to true
+    await prisma.user.update({
+      where: { id: userId },
+      data: { isSeller: true },
+    });
+
+    // Respond with success and seller data
+    res.status(201).json({
+      success: true,
+      message: "Seller profile created successfully",
+      seller,
+    });
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ success: false, message: "Internal server error" });

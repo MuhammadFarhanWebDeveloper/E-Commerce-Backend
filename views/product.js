@@ -6,20 +6,22 @@ import {
   getManyProducts,
   getOneProduct,
   uploadProduct,
+  uploadProductImages,
 } from "../controllers/product.controller.js";
 import upload from "../middleware/multer.js";
-import isUserSeller from "../middleware/isUserSeller.js";
+import { isSeller } from "../middleware/isUserSeller.js";
 const router = express.Router();
 
 router.get("/get-many-poducts", getManyProducts);
 router.get("/get-one-poduct/:id", getOneProduct);
-router.post(
-  "/add-product",
-  isUserLoggedIn,
-  upload.array("images"),
-  uploadProduct
-);
-router.put("/edit-product/:id", isUserSeller, editProduct);
-router.delete("/delete-product/:id", isUserSeller, deleteProduct);
+router.post("/add-product", isUserLoggedIn, isSeller, upload.array("images"), uploadProduct);
+router.put("/edit-product/:id", isUserLoggedIn, isSeller, editProduct);
+router.delete("/delete-product/:id", isUserLoggedIn, isSeller, deleteProduct);
 
+router.post(
+  "/upload-images/:productid",
+  isUserLoggedIn,
+  isSeller,
+  uploadProductImages
+);
 export default router;

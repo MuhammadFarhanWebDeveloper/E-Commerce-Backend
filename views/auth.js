@@ -2,6 +2,7 @@ import express from "express";
 import { body } from "express-validator";
 import isUserLoggedIn from "../middleware/isUserLoggedIn.js";
 import {
+  becomeSeller,
   forgotPassword,
   getUser,
   login,
@@ -13,7 +14,8 @@ import {
 } from "../controllers/auth.controller.js";
 import isTokenSent from "../middleware/isTokenSent.js";
 import isTokenVerified from "../middleware/isTokenVerified.js";
-
+import resetPasswordToken from "../middleware/ResetPasswordToken.js";
+import { isSeller } from "../middleware/isUserSeller.js";
 const router = express.Router();
 
 const registerFieldsValidation = [
@@ -37,18 +39,17 @@ const loginFieldsValidation = [
     min: 4,
   }),
 ];
-const updateUserValidation = [
-  
-]
+const updateUserValidation = [];
 const sendOTPValidation = [body("email", "Enter a valid email").isEmail()];
 router.post("/send-otp", sendOTPValidation, sendOTP);
 router.post("/verify-otp", isTokenSent, verifyOTP);
 router.post("/register", isTokenVerified, registerFieldsValidation, register);
 router.post("/login", loginFieldsValidation, login);
-router.post("/update-user",)
+router.post("/update-user");
 router.post("/forgot-password", forgotPassword);
-router.post("/reset-password", resetPassword, resetPassword);
+router.post("/reset-password", resetPasswordToken, resetPassword);
 
 router.post("/logout", isUserLoggedIn, logout);
 router.post("/getuser", isUserLoggedIn, getUser);
+router.post("/become-seller", isUserLoggedIn, isSeller,becomeSeller);
 export default router;

@@ -15,7 +15,7 @@ const resetPasswordToken = (req, res, next) => {
         .json({ success: false, message: "Unauthorized - invalid token" });
     }
     req.userEmail = decoded.email;
-    req.userId = decoded.id
+    req.userId = decoded.id;
     next();
   } catch (error) {
     console.log("Error in verifyToken ", error);

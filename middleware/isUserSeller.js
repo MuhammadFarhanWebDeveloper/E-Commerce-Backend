@@ -1,30 +1,23 @@
-import jwt from "jsonwebtoken";
-
-const isUserSeller = (req, res, next) => {
-  const token = req.cookies.sellertoken;
-  if (!token)
-    return res
-      .status(401)
-      .json({ success: false, message: "You've no permission as a seller" });
+import prisma from "../utils/db.config.js"
+export const isSeller = async (req, res, next) => {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const { userId } = req.user; 
 
-    if (!decoded)
-      return res
-        .status(401)
-        .json({
-          success: false,
-          message: "Login as a seller using valid credentials",
-        });
+    const seller = await prisma.seller.findUnique({
+      where: {
+        userId: userId,
+      },
+    });
 
-    req.userId = decoded.id;
-    req.userEmail = decoded.email;
+    if (!seller) {
+      return res.status(403).json({ success: false, message: "Access denied. User is not a seller." });
+    }
+
+    req.seller = seller;
+
     next();
   } catch (error) {
-    console.log(error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal server error" });
+    console.error(error);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
-export default isUserSeller;
