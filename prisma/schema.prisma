@@ -51,26 +51,16 @@ model Product {
   description String
   price       Float
   stock       Int         @default(0)
-  categoryId  Int
-  category    Category    @relation(fields: [categoryId], references: [id])
+  categoryId  Int?
+  category    Category?    @relation(fields: [categoryId], references: [id]) 
   sellerId    Int
-  seller      Seller      @relation(fields: [sellerId], references: [id])
+  seller      Seller      @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   images      Image[]
   reviews     Review[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   OrderItem   OrderItem[]
   CartItem    CartItem[]
-}
-model CartItem {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  productId Int
-  product   Product  @relation(fields: [productId], references: [id])
-  quantity  Int      @default(1)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now())
 }
 model Category {
   id          Int       @id @default(autoincrement())
@@ -83,8 +73,20 @@ model Image {
   id        Int     @id @default(autoincrement())
   url       String
   productId Int
-  product   Product @relation(fields: [productId], references: [id])
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+
 
 model Order {
   id         Int         @id @default(autoincrement())
