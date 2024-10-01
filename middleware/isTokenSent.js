@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 
 const isTokenSent = (req, res, next) => {
-  const token = req.cookies.otpsent;
+  const token = req.header("otpsent") || req.cookies.otpsent;
   if (!token)
     return res
       .status(401)

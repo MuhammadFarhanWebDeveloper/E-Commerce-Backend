@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 
 const resetPasswordToken = (req, res, next) => {
-  const token = req.cookies.resetpasswordtoken;
+  const token =req.header("resetpasswordtoken") || req.cookies.resetpasswordtoken;
   if (!token)
     return res
       .status(401)

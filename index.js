@@ -10,11 +10,7 @@ const PORT = 5000;
 config({
   path: "./.env",
 });
-const allowedOrigins = [
-  "http://localhost:3000",
-  "http://localhost:49811",
-  "https://haris-flutter-app.app",
-];
+const allowedOrigins = ["http://localhost:3000", "http://localhost:4041"];
 
 app.use(
   cors({
@@ -25,6 +21,7 @@ app.use(
         callback(new Error("Not allowed by CORS"));
       }
     },
+    methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
 );

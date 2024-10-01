@@ -33,6 +33,7 @@ export const sendOTP = async (req, res) => {
       otp: hashedOTP,
     };
     const otpsent = jsonwebtoken.sign(payload, process.env.JWT_SECRET);
+    res.set("otpsent", otpsent);
     res
       .cookie("otpsent", otpsent, {
         maxAge: 15 * 60 * 1000,
@@ -61,9 +62,12 @@ export const verifyOTP = async (req, res) => {
     };
 
     const verified = jsonwebtoken.sign(payload, process.env.JWT_SECRET);
+    res.set("verified", verified);
     res
       .cookie("verified", verified, {
-        maxAge: 25 * 60 * 1000,
+        maxAge: 15 * 60 * 1000,
+        sameSite: "none",
+        secure: true,
       })
       .json({
         success: true,
@@ -122,10 +126,12 @@ export const register = async (req, res) => {
     };
 
     const authtoken = jsonwebtoken.sign(payload, process.env.JWT_SECRET);
-
+    res.set("authtoken", authtoken);
     res
       .cookie("authtoken", authtoken, {
         maxAge: 10 * 24 * 60 * 60 * 1000, // Expires in 10 days
+        sameSite: "none",
+        secure: true,
       })
       .json({
         success: true,
@@ -168,9 +174,12 @@ export const login = async (req, res) => {
     };
 
     const authtoken = jsonwebtoken.sign(payload, process.env.JWT_SECRET);
+    res.set("authtoken", authtoken);
     res
       .cookie("authtoken", authtoken, {
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+        sameSite: "none",
+        secure: true,
       })
       .json({ success: true, user });
   } catch (error) {
@@ -209,10 +218,13 @@ export const forgotPassword = async (req, res) => {
       payload,
       process.env.JWT_SECRET
     );
+    res.set("resetpasswordtoken", resetPassword);
     res
       .status(200)
       .cookie("resetpasswordtoken", resetPasswordToken, {
         maxAge: 15 * 60 * 1000,
+        sameSite: "none",
+        secure: true,
       })
       .json({
         success: true,
