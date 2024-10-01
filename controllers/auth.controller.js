@@ -37,7 +37,8 @@ export const sendOTP = async (req, res) => {
     res
       .cookie("otpsent", otpsent, {
         maxAge: 15 * 60 * 1000,
-
+        sameSite: "none",
+        secure: true,
       })
       .json({ success: true, message: "Verification Email sent " });
   } catch (error) {
