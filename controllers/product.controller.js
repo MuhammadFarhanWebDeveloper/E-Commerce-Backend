@@ -103,7 +103,7 @@ export const getManyProducts = async (req, res) => {
   try {
     const {
       page = 1,
-      limit = 10,
+      limit = 8,
       category,
       search,
       sortBy = "createdAt",
@@ -457,3 +457,5 @@ export const removeFromCart = async (req, res) => {
     });
   }
 };
+
+
