@@ -41,6 +41,7 @@ export const AddCategory = async (req, res) => {
 
 export const getCategory = async (req, res) => {
   try {
+    console.log("Hey there")
     const { id } = req.params;
 
     const category = await prisma.category.findUnique({
@@ -64,6 +65,7 @@ export const getCategory = async (req, res) => {
 
 export const getAllCategories = async (req, res) => {
   try {
+    console.log("I'm working")
     const categories = await prisma.category.findMany();
 
     return res.status(200).json({ success: true, data: categories });
@@ -86,6 +88,13 @@ export const updateCategory = async (req, res) => {
         .status(400)
         .json({ success: false, message: "Name is too short" });
     }
+    // Check if the new category name already exists
+    const existingCategory = await prisma.category.findUnique({
+      where: { name },
+    });
+    if (existingCategory && existingCategory.id !== parseInt(id)) {
+      return res.status(400).json({ success: false, message: "Category name already exists" });
+    }
 
     const updatedCategory = await prisma.category.update({
       where: { id: parseInt(id) },
@@ -106,6 +115,7 @@ export const updateCategory = async (req, res) => {
       .json({ success: false, message: "Internal server error" });
   }
 };
+
 
 export const deleteCategory = async (req, res) => {
   try {

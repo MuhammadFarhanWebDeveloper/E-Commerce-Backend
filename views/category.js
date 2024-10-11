@@ -10,8 +10,8 @@ import {
 const category = express.Router();
 
 category.post("/create", AddCategory);
-category.get("/:id", getCategory);
-category.get("/all", getAllCategories);
+category.get("/getone/id", getCategory);
+category.get("/getall", getAllCategories);
 category.put("/update/:id", updateCategory);
 category.delete("/delete/:id", deleteCategory);
 
