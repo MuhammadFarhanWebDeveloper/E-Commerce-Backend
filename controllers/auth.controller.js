@@ -5,13 +5,15 @@ import bcryptjs from "bcryptjs";
 import sendVerificationEmail from "../utils/sendVerificationEmail.js";
 import sendPasswordResetEmail from "../utils/sendPasswordResetEmail.js";
 import sendWelcomeEmail from "../utils/sendWelcomeEmail.js";
+import cloudinary from "../utils/cloudinary.config.js";
 export const sendOTP = async (req, res) => {
   const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res
-      .status(400)
-      .json({ success: false, message: "BKL use valid credentials," });
-  }
+if (!errors.isEmpty()) {
+  return res.status(400).json({
+    success: false,
+    errors: errors.array(),
+  });
+}
   try {
     const { email } = req.body;
     const user = await prisma.user.findUnique({
@@ -80,9 +82,10 @@ export const verifyOTP = async (req, res) => {
 export const register = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res
-      .status(400)
-      .json({ success: false, message: "BKL use valid credentials," });
+    return res.status(400).json({
+      success: false,
+      errors: errors.array(),
+    });
   }
   try {
     const { firstName, lastName, password, isSeller, isAdmin } = req.body;
@@ -145,11 +148,12 @@ export const register = async (req, res) => {
 };
 export const login = async (req, res) => {
   const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res
-      .status(400)
-      .json({ success: false, message: "BKL use valid credentials," });
-  }
+if (!errors.isEmpty()) {
+  return res.status(400).json({
+    success: false,
+    errors: errors.array(),
+  });
+}
   try {
     const { email, password } = req.body;
     const user = await prisma.user.findFirst({
@@ -182,6 +186,45 @@ export const login = async (req, res) => {
         secure: true,
       })
       .json({ success: true, user });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+export const updateUserInfo = async (req, res) => {
+  const errors = validationResult(req);
+if (!errors.isEmpty()) {
+  return res.status(400).json({
+    success: false,
+    errors: errors.array(),
+  });
+}
+
+  try {
+    const { firstName, lastName, bio, address, phoneNumber } = req.body;
+    // Initialize the data object to store updates
+    const updateData = {};
+
+    // Check if any values are provided and add them to the updateData object
+    if (firstName) updateData.firstName = firstName;
+    if (lastName) updateData.lastName = lastName;
+
+    if (bio) updateData.bio = bio;
+    if (address) updateData.address = address;
+    if (phoneNumber) updateData.phoneNumber = phoneNumber;
+
+    if (req.file) {
+      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+        folder: "profilePictures", // Specify the folder in Cloudinary
+      });
+      updateData.profilePicture = uploadResult.secure_url;
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: req.userId },
+      data: updateData,
+    });
+    res.status(200).json({ success: true, user: updatedUser });
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ success: false, message: "Internal server error" });
@@ -335,6 +378,7 @@ export const logout = async (req, res) => {
 
 export const becomeSeller = async (req, res) => {
   try {
+    console.log("working ...");
     const {
       storeName,
       storeDescription,
@@ -343,7 +387,7 @@ export const becomeSeller = async (req, res) => {
       socialMediaLinks,
     } = req.body;
     const userId = req.userId;
-
+    console.log(userId);
     if (!storeName) {
       return res.status(400).json({
         success: false,
@@ -367,7 +411,7 @@ export const becomeSeller = async (req, res) => {
         .json({ success: false, message: "User is already a seller" });
     }
 
-    // Create a new seller entry in the Seller table
+    // Create a new seller entry in the Seller tUnable
     const seller = await prisma.seller.create({
       data: {
         userId: userId,
@@ -396,5 +440,41 @@ export const becomeSeller = async (req, res) => {
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+
+
+export const deleteUser = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email is required" });
+    }
+
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Delete the user
+    const deletedUser = await prisma.user.delete({
+      where: { email },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "User deleted successfully",
+      data: deletedUser, // optional: return deleted user info
+    });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    return res.status(500).json({ success: false, message: "Internal server error" });
   }
 };

@@ -41,7 +41,6 @@ export const AddCategory = async (req, res) => {
 
 export const getCategory = async (req, res) => {
   try {
-    console.log("Hey there")
     const { id } = req.params;
 
     const category = await prisma.category.findUnique({
@@ -65,7 +64,6 @@ export const getCategory = async (req, res) => {
 
 export const getAllCategories = async (req, res) => {
   try {
-    console.log("I'm working")
     const categories = await prisma.category.findMany();
 
     return res.status(200).json({ success: true, data: categories });
