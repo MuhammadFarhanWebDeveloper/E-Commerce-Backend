@@ -3,6 +3,7 @@ import { body } from "express-validator";
 import isUserLoggedIn from "../middleware/isUserLoggedIn.js";
 import {
   becomeSeller,
+  deleteUser,
   forgotPassword,
   getUser,
   login,
