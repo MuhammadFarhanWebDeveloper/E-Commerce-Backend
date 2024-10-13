@@ -214,7 +214,7 @@ export const editProduct = async (req, res) => {
 
     const updateData = {};
     if (name) updateData.name = name;
-    if (price) updateData.price = price;
+    if (price) updateData.price = parseInt(price);
     if (description) updateData.description = description;
     if (category) updateData.categoryId = category.id;
 
