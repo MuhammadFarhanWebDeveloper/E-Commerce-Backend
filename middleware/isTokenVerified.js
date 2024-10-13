@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 
 const isTokenVerified = (req, res, next) => {
-  const token = req.header("verifiedri") || req.cookies.verified;
+  const token = req.header("verified") || req.cookies.verified;
   if (!token)
     return res
       .status(401)
