@@ -9,15 +9,15 @@ export const uploadProduct = async (req, res) => {
   }
 
   try {
-    const userId = req.userId;
+    const sellerId = req.sellerId;
     const { name, description, price, categoryName } = req.body;
     const images = req.files;
 
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) {
+    const seller = await prisma.seller.findUnique({ where: { id: sellerId } });
+    if (!seller) {
       return res
         .status(404)
-        .json({ success: false, message: "User not found" });
+        .json({ success: false, message: "User not found as seller" });
     }
 
     const category = await prisma.category.upsert({
@@ -39,7 +39,7 @@ export const uploadProduct = async (req, res) => {
         name,
         description,
         price: parseFloat(price),
-        sellerId: userId,
+        sellerId: sellerId,
         categoryId: category.id,
       },
     });
@@ -55,7 +55,10 @@ export const uploadProduct = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Product uploaded successfully",
-      product,
+      product: {
+        ...product,
+        images: imageUrls.map((url) => ({ url })),
+      },
     });
   } catch (error) {
     console.error(error.message);
@@ -176,7 +179,7 @@ export const editProduct = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, price, description, categoryName } = req.body;
-    const userId = req.userId; // Assuming `userId` is set by authentication middleware
+    const sellerId = req.sellerId; // Assuming `userId` is set by authentication middleware
 
     const product = await prisma.product.findUnique({
       where: { id: parseInt(id, 10) },
@@ -188,7 +191,7 @@ export const editProduct = async (req, res) => {
         .json({ success: false, message: "Product not found" });
     }
 
-    if (product.sellerId !== userId) {
+    if (product.sellerId !== sellerId) {
       return res
         .status(403)
         .json({
@@ -226,23 +229,23 @@ export const editProduct = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
+
 export const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.userId; // Assuming you have user ID in the request object
+    const sellerId = req.sellerId; 
 
     // Find the product by ID
     const product = await prisma.product.findUnique({
       where: { id: parseInt(id, 10) },
-      include: { images: true }, // Include images to delete them later
+      include: { images: true }, 
     });
 
     if (!product) {
       return res.status(404).json({ success: false, message: "Product not found" });
     }
 
-    // Check if the logged-in user is the seller of the product
-    if (product.sellerId !== userId) {
+    if (product.sellerId !== sellerId) {
       return res.status(403).json({
         success: false,
         message: "You are not authorized to delete this product",
