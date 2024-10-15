@@ -104,6 +104,7 @@ export const getManyProducts = async (req, res) => {
       search,
       sortBy = "createdAt",
       order = "desc",
+      seller,
     } = req.query;
 
     const limitInt = parseInt(limit, 10);
@@ -112,25 +113,24 @@ export const getManyProducts = async (req, res) => {
 
     const filters = {};
 
-    // Combine category and search filters using AND
-    if (category || search) {
-      filters.AND = [];
-
-      if (category) {
-        filters.AND.push({ category: { name: category } });
-      }
-
-      if (search) {
-        filters.AND.push({
-          OR: [
-            { name: { search: search } },
-            { description: { search: search } },
-          ],
-        });
-      }
+    // Filter by category
+    if (category) {
+      filters.category = { name: category };
     }
 
-    // Fetch products from the database
+    // Filter by search query in name or description
+    if (search) {
+      filters.OR = [
+        { name: { search: search } },
+        { description: { search: search } },
+      ];
+    }
+
+    // Filter by sellerId if provided
+    if (seller) {
+      filters.sellerId = seller;
+    }
+
     const products = await prisma.product.findMany({
       where: filters,
       include: {
@@ -167,6 +167,7 @@ export const getManyProducts = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
+
 
 export const editProduct = async (req, res) => {
   try {
