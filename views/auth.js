@@ -79,13 +79,13 @@ router.post("/send-otp", sendOTPValidation, sendOTP);
 router.post("/verify-otp", isTokenSent, verifyOTP);
 router.post("/register", isTokenVerified, registerFieldsValidation, register);
 router.post("/login", loginFieldsValidation, login);
-router.put("/update-user", upload.single("profilePicture"), updateUserInfo);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPasswordToken, resetPassword);
 
 router.post("/logout", isUserLoggedIn, logout);
 router.post("/getuser", isUserLoggedIn, getUser);
-router.post("/become-seller", isUserLoggedIn, becomeSeller);
+router.put("/update-user", upload.single("profilePicture"), updateUserInfo);
+router.post("/become-seller", isUserLoggedIn, upload.single("logo"), becomeSeller);
 
 router.delete('/delete-user', deleteUser);
 

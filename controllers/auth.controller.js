@@ -6,14 +6,15 @@ import sendVerificationEmail from "../utils/sendVerificationEmail.js";
 import sendPasswordResetEmail from "../utils/sendPasswordResetEmail.js";
 import sendWelcomeEmail from "../utils/sendWelcomeEmail.js";
 import cloudinary from "../utils/cloudinary.config.js";
+
 export const sendOTP = async (req, res) => {
   const errors = validationResult(req);
-if (!errors.isEmpty()) {
-  return res.status(400).json({
-    success: false,
-    errors: errors.array(),
-  });
-}
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      success: false,
+      errors: errors.array(),
+    });
+  }
   try {
     const { email } = req.body;
     const user = await prisma.user.findUnique({
@@ -148,12 +149,12 @@ export const register = async (req, res) => {
 };
 export const login = async (req, res) => {
   const errors = validationResult(req);
-if (!errors.isEmpty()) {
-  return res.status(400).json({
-    success: false,
-    errors: errors.array(),
-  });
-}
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      success: false,
+      errors: errors.array(),
+    });
+  }
   try {
     const { email, password } = req.body;
     const user = await prisma.user.findFirst({
@@ -193,12 +194,12 @@ if (!errors.isEmpty()) {
 };
 export const updateUserInfo = async (req, res) => {
   const errors = validationResult(req);
-if (!errors.isEmpty()) {
-  return res.status(400).json({
-    success: false,
-    errors: errors.array(),
-  });
-}
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      success: false,
+      errors: errors.array(),
+    });
+  }
 
   try {
     const { firstName, lastName, bio, address, phoneNumber } = req.body;
@@ -376,18 +377,59 @@ export const logout = async (req, res) => {
   }
 };
 
+export const deleteUser = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Email is required" });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    // Delete the user
+    const deletedUser = await prisma.user.delete({
+      where: { email },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "User deleted successfully",
+      data: deletedUser, // optional: return deleted user info
+    });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
+
 export const becomeSeller = async (req, res) => {
   try {
-    console.log("working ...");
-    const {
-      storeName,
-      storeDescription,
-      storeLogo,
-      businessAddress,
-      socialMediaLinks,
-    } = req.body;
+    const { storeName, storeDescription, businessAddress, socialMediaLinks } =
+      req.body;
     const userId = req.userId;
-    console.log(userId);
+
+    let storeLogo = null;
+
+    if (req.file) {
+      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+        folder: "storeLogos",
+      });
+      storeLogo = uploadResult.secure_url;
+    }
+
     if (!storeName) {
       return res.status(400).json({
         success: false,
@@ -443,38 +485,53 @@ export const becomeSeller = async (req, res) => {
   }
 };
 
-
-
-export const deleteUser = async (req, res) => {
+export const updateSellerInfo = async (req, res) => {
   try {
-    const { email } = req.body;
+    const { storeName, storeDescription, businessAddress, socialMediaLinks } =
+      req.body;
+    const sellerId = req.sellerId;
 
-    if (!email) {
-      return res.status(400).json({ success: false, message: "Email is required" });
-    }
-
-
-    const user = await prisma.user.findUnique({
-      where: { email },
+    const seller = await prisma.seller.findUnique({
+      where: { id: parseInt(sellerId) },
     });
 
-
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+    if (!seller) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Seller not found" });
     }
 
-    // Delete the user
-    const deletedUser = await prisma.user.delete({
-      where: { email },
+    let storeLogo = null;
+
+    if (req.file) {
+      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+        folder: "storeLogos",
+      });
+      storeLogo = uploadResult.secure_url;
+    }
+
+    const updatedSeller = await prisma.seller.update({
+      where: { id: seller.id },
+      data: {
+        storeName: storeName || seller.storeName,
+        storeDescription: storeDescription || seller.storeDescription,
+        businessAddress: businessAddress || seller.businessAddress,
+        socialMediaLinks: socialMediaLinks
+          ? JSON.parse(socialMediaLinks)
+          : seller.socialMediaLinks,
+        storeLogo: storeLogo || seller.storeLogo,
+      },
     });
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
-      message: "User deleted successfully",
-      data: deletedUser, // optional: return deleted user info
+      message: "Seller information updated successfully",
+      seller: updatedSeller,
     });
   } catch (error) {
-    console.error("Error deleting user:", error);
-    return res.status(500).json({ success: false, message: "Internal server error" });
+    console.log(error.message);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
+
+

@@ -180,7 +180,7 @@ export const editProduct = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, price, description, categoryName } = req.body;
-    const sellerId = req.sellerId; // Assuming `userId` is set by authentication middleware
+    const sellerId = req.sellerId; 
 
     const product = await prisma.product.findUnique({
       where: { id: parseInt(id, 10) },
@@ -285,7 +285,7 @@ export const uploadProductImages = async (req, res) => {
   try {
     const images = req.files;
     const { productid } = req.params;
-    const userId = req.userId;
+    const sellerId = req.sellerId;
     const product = await prisma.product.findUnique({
       where: { id: parseInt(productid, 10) },
     });
@@ -295,7 +295,7 @@ export const uploadProductImages = async (req, res) => {
         message: "Sorry, We could'nt found your product",
       });
     }
-    if (product.sellerId !== userId) {
+    if (product.sellerId !== sellerId) {
       return res.status(403).json({
         success: false,
         message: "You are not authorized to upload images for this product",
@@ -328,7 +328,7 @@ export const uploadProductImages = async (req, res) => {
 export const deleteProductImage = async (req, res) => {
   try {
     const { imageId } = req.params;
-    const userId = req.userId;
+    const sellerId = req.sellerId;
 
     const image = await prisma.image.findUnique({
       where: { id: parseInt(imageId, 10) },
@@ -340,7 +340,7 @@ export const deleteProductImage = async (req, res) => {
         .json({ success: false, message: "Image not found" });
     }
 
-    if (image.product.sellerId !== userId) {
+    if (image.product.sellerId !== sellerId) {
       return res.status(403).json({
         success: false,
         message: "You are not authorized to delete this image",
