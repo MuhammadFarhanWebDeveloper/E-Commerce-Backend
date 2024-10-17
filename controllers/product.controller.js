@@ -118,19 +118,24 @@ export const getManyProducts = async (req, res) => {
       filters.category = { name: category };
     }
 
-    // Filter by search query in name or description
     if (search) {
-      filters.OR = [
-        { name: { search: search } },
-        { description: { search: search } },
-      ];
+      const searchTerms = search.split(" ");
+      filters.OR = searchTerms.map(term => ({
+        OR: [
+          { name: { contains: term, mode: "insensitive" } },
+          { description: { contains: term, mode: "insensitive" } }
+        ]
+      }));
     }
+    
+    
 
     // Filter by sellerId if provided
     if (seller) {
       filters.sellerId = seller;
     }
 
+    // Fetch products with pagination and sorting
     const products = await prisma.product.findMany({
       where: filters,
       include: {
@@ -145,6 +150,7 @@ export const getManyProducts = async (req, res) => {
       take: limitInt,
     });
 
+    // Get total count of filtered products
     const totalCount = await prisma.product.count({
       where: filters,
     });
@@ -167,6 +173,7 @@ export const getManyProducts = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
+
 
 
 export const editProduct = async (req, res) => {
