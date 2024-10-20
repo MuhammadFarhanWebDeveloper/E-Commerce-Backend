@@ -345,6 +345,7 @@ export const getUser = async (req, res) => {
         profilePicture: true,
         createdAt: true,
         updatedAt: true,
+        
       },
     });
 

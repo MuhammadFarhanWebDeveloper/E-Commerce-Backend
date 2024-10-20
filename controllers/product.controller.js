@@ -120,19 +120,26 @@ export const getManyProducts = async (req, res) => {
 
     if (search) {
       const searchTerms = search.split(" ");
-      filters.OR = searchTerms.map(term => ({
+      filters.OR = searchTerms.map((term) => ({
         OR: [
           { name: { contains: term, mode: "insensitive" } },
-          { description: { contains: term, mode: "insensitive" } }
-        ]
+          { description: { contains: term, mode: "insensitive" } },
+        ],
       }));
     }
-    
-    
 
     // Filter by sellerId if provided
     if (seller) {
-      filters.sellerId = seller;
+      const sellerUser = await prisma.seller.findFirst({
+        where: { id: parseInt(seller) },
+      });
+      if (!sellerUser) {
+        return res.status(404).json({success:false, message:"Can't find seller having this this id"})
+      }
+    }
+
+    if (seller) {
+      filters.sellerId = parseInt(seller);
     }
 
     // Fetch products with pagination and sorting
@@ -174,13 +181,11 @@ export const getManyProducts = async (req, res) => {
   }
 };
 
-
-
 export const editProduct = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, price, description, categoryName } = req.body;
-    const sellerId = req.sellerId; 
+    const sellerId = req.sellerId;
 
     const product = await prisma.product.findUnique({
       where: { id: parseInt(id, 10) },
@@ -193,12 +198,10 @@ export const editProduct = async (req, res) => {
     }
 
     if (product.sellerId !== sellerId) {
-      return res
-        .status(403)
-        .json({
-          success: false,
-          message: "You are not authorized to edit this product",
-        });
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to edit this product",
+      });
     }
     let category;
     if (categoryName) {
@@ -234,16 +237,18 @@ export const editProduct = async (req, res) => {
 export const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const sellerId = req.sellerId; 
+    const sellerId = req.sellerId;
 
     // Find the product by ID
     const product = await prisma.product.findUnique({
       where: { id: parseInt(id, 10) },
-      include: { images: true }, 
+      include: { images: true },
     });
 
     if (!product) {
-      return res.status(404).json({ success: false, message: "Product not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
     }
 
     if (product.sellerId !== sellerId) {
@@ -255,7 +260,7 @@ export const deleteProduct = async (req, res) => {
 
     // Delete associated images from Cloudinary
     const deleteImagePromises = product.images.map(async (image) => {
-      const publicId = image.url.split('/').pop().split('.')[0]; // Extract public ID from the URL
+      const publicId = image.url.split("/").pop().split(".")[0]; // Extract public ID from the URL
       await cloudinary.uploader.destroy(publicId); // Delete image from Cloudinary
     });
 
@@ -274,7 +279,9 @@ export const deleteProduct = async (req, res) => {
     });
   } catch (error) {
     if (error.code === "P2025") {
-      return res.status(404).json({ success: false, message: "Product not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
     }
     console.error(error); // Log the error for debugging
     res.status(500).json({ success: false, message: "Internal server error" });
@@ -461,5 +468,3 @@ export const removeFromCart = async (req, res) => {
     });
   }
 };
-
-
