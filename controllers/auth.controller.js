@@ -161,9 +161,9 @@ export const login = async (req, res) => {
       where: {
         email,
       },
-      include:{
-        seller:true
-      }
+      include: {
+        seller: true,
+      },
     });
     if (!user) {
       return res
@@ -176,6 +176,9 @@ export const login = async (req, res) => {
         .status(400)
         .json({ success: false, message: "Password was not matched" });
     }
+
+    const { password: userPassword, ...userWithoutPassword } = user;
+
     const payload = {
       email: user.email,
       id: user.id,
@@ -189,7 +192,7 @@ export const login = async (req, res) => {
         sameSite: "none",
         secure: true,
       })
-      .json({ success: true, user });
+      .json({ success: true, userWithoutPassword });
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ success: false, message: "Internal server error" });
@@ -348,8 +351,7 @@ export const getUser = async (req, res) => {
         profilePicture: true,
         createdAt: true,
         updatedAt: true,
-        seller:true
-        
+        seller: true,
       },
     });
 
@@ -538,5 +540,3 @@ export const updateSellerInfo = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
-
-
