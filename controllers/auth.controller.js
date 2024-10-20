@@ -161,6 +161,9 @@ export const login = async (req, res) => {
       where: {
         email,
       },
+      include:{
+        seller:true
+      }
     });
     if (!user) {
       return res
@@ -345,6 +348,7 @@ export const getUser = async (req, res) => {
         profilePicture: true,
         createdAt: true,
         updatedAt: true,
+        seller:true
         
       },
     });
