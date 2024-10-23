@@ -191,7 +191,8 @@ export const login = async (req, res) => {
         maxAge: 30 * 24 * 60 * 60 * 1000,
         sameSite: "none",
         secure: true,
-        path:"/"
+        path:"/",
+        domain:"e-commerce-frontend-xi-seven.vercel.app"
       })
       .json({ success: true, userWithoutPassword });
   } catch (error) {
