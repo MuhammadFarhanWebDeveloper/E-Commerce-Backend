@@ -11,7 +11,7 @@ const PORT = 5000;
 config({
   path: "./.env",
 });
-const allowedOrigins = ["http://localhost:3000", "http://localhost:4041"];
+const allowedOrigins = ["http://localhost:3000", "http://localhost:4041", "https://e-commerce-frontend.vercel.app"];
 
 app.use(
   cors({
