@@ -487,7 +487,7 @@ export const becomeSeller = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Seller profile created successfully",
-      seller,
+      user:newUser,
     });
   } catch (error) {
     console.log(error.message);
