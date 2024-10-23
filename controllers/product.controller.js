@@ -10,7 +10,7 @@ export const uploadProduct = async (req, res) => {
 
   try {
     const sellerId = req.sellerId;
-    const { name, description, price, categoryName } = req.body;
+    const { name, description, price, categoryName , stock} = req.body;
     const images = req.files;
 
     const seller = await prisma.seller.findUnique({ where: { id: sellerId } });
@@ -39,12 +39,13 @@ export const uploadProduct = async (req, res) => {
         name,
         description,
         price: parseFloat(price),
+        stock: parseInt(stock),
         sellerId: sellerId,
         categoryId: category.id,
       },
     });
 
-    // Store uploaded image URLs in the database
+    
     await prisma.image.createMany({
       data: imageUrls.map((url) => ({
         url,
@@ -113,7 +114,7 @@ export const getManyProducts = async (req, res) => {
 
     const filters = {};
 
-    // Filter by category
+    
     if (category) {
       filters.category = { name: category };
     }
@@ -128,7 +129,7 @@ export const getManyProducts = async (req, res) => {
       }));
     }
 
-    // Filter by sellerId if provided
+    
     if (seller) {
       const sellerUser = await prisma.seller.findFirst({
         where: { id: parseInt(seller) },
@@ -142,7 +143,7 @@ export const getManyProducts = async (req, res) => {
       filters.sellerId = parseInt(seller);
     }
 
-    // Fetch products with pagination and sorting
+    
     const products = await prisma.product.findMany({
       where: filters,
       include: {
@@ -157,14 +158,14 @@ export const getManyProducts = async (req, res) => {
       take: limitInt,
     });
 
-    // Get total count of filtered products
+    
     const totalCount = await prisma.product.count({
       where: filters,
     });
 
     const totalPages = Math.ceil(totalCount / limitInt);
 
-    // Return the list of products and pagination details
+    
     res.status(200).json({
       success: true,
       products,
@@ -239,7 +240,7 @@ export const deleteProduct = async (req, res) => {
     const { id } = req.params;
     const sellerId = req.sellerId;
 
-    // Find the product by ID
+    
     const product = await prisma.product.findUnique({
       where: { id: parseInt(id, 10) },
       include: { images: true },
@@ -258,16 +259,16 @@ export const deleteProduct = async (req, res) => {
       });
     }
 
-    // Delete associated images from Cloudinary
+    
     const deleteImagePromises = product.images.map(async (image) => {
-      const publicId = image.url.split("/").pop().split(".")[0]; // Extract public ID from the URL
-      await cloudinary.uploader.destroy(publicId); // Delete image from Cloudinary
+      const publicId = image.url.split("/").pop().split(".")[0]; 
+      await cloudinary.uploader.destroy(publicId); 
     });
 
-    // Wait for all images to be deleted
+    
     await Promise.all(deleteImagePromises);
 
-    // Delete the product from the database
+    
     const deletedProduct = await prisma.product.delete({
       where: { id: parseInt(id, 10) },
     });
@@ -283,7 +284,7 @@ export const deleteProduct = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Product not found" });
     }
-    console.error(error); // Log the error for debugging
+    console.error(error); 
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
