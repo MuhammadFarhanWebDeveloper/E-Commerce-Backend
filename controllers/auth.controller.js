@@ -133,7 +133,7 @@ export const register = async (req, res) => {
     res.set("authtoken", authtoken);
     res
       .cookie("authtoken", authtoken, {
-        maxAge: 10 * 24 * 60 * 60 * 1000, 
+        maxAge: 10 * 24 * 60 * 60 * 1000,
         sameSite: "none",
         secure: true,
       })
@@ -191,7 +191,7 @@ export const login = async (req, res) => {
         maxAge: 30 * 24 * 60 * 60 * 1000,
         sameSite: "none",
         secure: true,
-        httpOnly:true,
+        partitioned: true,
       })
       .json({ success: true, userWithoutPassword });
   } catch (error) {
@@ -210,10 +210,9 @@ export const updateUserInfo = async (req, res) => {
 
   try {
     const { firstName, lastName, bio, address, phoneNumber } = req.body;
-    
+
     const updateData = {};
 
-    
     if (firstName) updateData.firstName = firstName;
     if (lastName) updateData.lastName = lastName;
 
@@ -223,7 +222,7 @@ export const updateUserInfo = async (req, res) => {
 
     if (req.file) {
       const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-        folder: "profilePictures", 
+        folder: "profilePictures",
       });
       updateData.profilePicture = uploadResult.secure_url;
     }
@@ -250,7 +249,7 @@ export const forgotPassword = async (req, res) => {
     }
 
     const resetToken = Math.floor(100000 + Math.random() * 900000).toString();
-    const resetTokenExpiresAt = new Date(Date.now() + 15 * 60 * 1000); 
+    const resetTokenExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
     await prisma.user.update({
       where: { email },
@@ -307,8 +306,6 @@ export const resetPassword = async (req, res) => {
         .status(400)
         .json({ success: false, message: "Invalid or expired OTP." });
     }
-
-    
 
     const salt = await bcryptjs.genSalt(10);
     const hashedPassword = await bcryptjs.hash(newPassword, salt);
@@ -405,7 +402,6 @@ export const deleteUser = async (req, res) => {
         .json({ success: false, message: "User not found" });
     }
 
-    
     const deletedUser = await prisma.user.delete({
       where: { email },
     });
@@ -413,7 +409,7 @@ export const deleteUser = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "User deleted successfully",
-      data: deletedUser, 
+      data: deletedUser,
     });
   } catch (error) {
     console.error("Error deleting user:", error);
@@ -461,7 +457,6 @@ export const becomeSeller = async (req, res) => {
         .json({ success: false, message: "User is already a seller" });
     }
 
-    
     const seller = await prisma.seller.create({
       data: {
         userId: userId,
@@ -475,7 +470,6 @@ export const becomeSeller = async (req, res) => {
       },
     });
 
-    
     const newUser = await prisma.user.update({
       where: { id: userId },
       data: { isSeller: true },
@@ -484,11 +478,10 @@ export const becomeSeller = async (req, res) => {
       },
     });
 
-    
     res.status(201).json({
       success: true,
       message: "Seller profile created successfully",
-      user:newUser,
+      user: newUser,
     });
   } catch (error) {
     console.log(error.message);
