@@ -192,7 +192,6 @@ export const login = async (req, res) => {
         sameSite: "none",
         secure: true,
         partitioned: true,
-        domain:".vercel.app"
       })
       .json({ success: true, userWithoutPassword });
   } catch (error) {
