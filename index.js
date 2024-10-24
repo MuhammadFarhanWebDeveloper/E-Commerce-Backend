@@ -11,17 +11,22 @@ const PORT = 5000;
 config({
   path: "./.env",
 });
-const allowedOrigins = ["http://localhost:3000", "http://localhost:4041", "https://e-commerce-frontend-xi-seven.vercel.app"];
+// const allowedOrigins = [
+//   "http://localhost:3000",
+//   "http://localhost:4041",
+//   "https://e-commerce-frontend-xi-seven.vercel.app",
+// ];
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
+    origin:"https://e-commerce-frontend-xi-seven.vercel.app",
+    //  function (origin, callback) {
+    //   if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+    //     callback(null, true);
+    //   } else {
+    //     callback(new Error("Not allowed by CORS"));
+    //   }
+    // },
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
@@ -31,7 +36,7 @@ app.use(express.json());
 
 app.use("/api/auth", auth);
 app.use("/api/product", product);
-app.use("/api/category", category)
+app.use("/api/category", category);
 app.get("/", (req, res) => {
   res.json({ woring: true });
 });
