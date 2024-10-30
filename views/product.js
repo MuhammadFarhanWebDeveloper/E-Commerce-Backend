@@ -16,7 +16,7 @@ router.get("/get-many-poducts", getManyProducts);
 router.get("/get-one-poduct/:id", getOneProduct);
 router.post("/add-product", isUserLoggedIn, isSeller, upload.array("images"), uploadProduct);
 router.put("/edit-product/:id", isUserLoggedIn, isSeller, editProduct);
-router.delete("/delete-product/:id", isUserLoggedIn, isSeller, deleteProduct);
+router.delete("/delete-product/:id", isUserLoggedIn, isSeller,upload.array("images"), deleteProduct);
 
 router.post(
   "/upload-images/:productid",

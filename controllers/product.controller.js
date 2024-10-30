@@ -67,6 +67,97 @@ export const uploadProduct = async (req, res) => {
   }
 };
 
+
+export const editProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, price, description, categoryName } = req.body;
+    const sellerId = req.sellerId;
+    const newImages = req.files;
+
+    const product = await prisma.product.findUnique({
+      where: { id: parseInt(id, 10) },
+      include: { images: true }
+    });
+
+    if (!product) {
+      return res.status(404).json({ success: false, message: "Product not found" });
+    }
+
+    if (product.sellerId !== sellerId) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to edit this product",
+      });
+    }
+
+    let category;
+    if (categoryName) {
+      category = await prisma.category.findUnique({
+        where: { name: categoryName },
+      });
+
+      if (!category) {
+        return res.status(404).json({ success: false, message: "Category not found" });
+      }
+    }
+
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (price) updateData.price = parseInt(price);
+    if (description) updateData.description = description;
+    if (category) updateData.categoryId = category.id;
+
+    if (newImages && newImages.length > 0) {
+      // Delete existing images from Cloudinary
+      const oldImagePublicIds = product.images.map((image) => {
+        const publicId = image.url.split('/').pop().split('.')[0];
+        return `products/${publicId}`;
+      });
+
+      await Promise.all(
+        oldImagePublicIds.map((publicId) =>
+          cloudinary.uploader.destroy(publicId)
+        )
+      );
+
+      // Upload new images to Cloudinary
+      const newImageUrls = await Promise.all(
+        newImages.map((file) =>
+          cloudinary.uploader
+            .upload(file.path, { folder: "products" })
+            .then((result) => result.secure_url)
+        )
+      );
+
+      // Delete old images from the database
+      await prisma.image.deleteMany({
+        where: { productId: product.id },
+      });
+
+      // Add the new images to the database
+      await prisma.image.createMany({
+        data: newImageUrls.map((url) => ({
+          url,
+          productId: product.id,
+        })),
+      });
+    }
+
+    // Update the product information
+    const updatedProduct = await prisma.product.update({
+      where: { id: parseInt(id, 10) },
+      data: updateData,
+      include: { images: true }
+    });
+
+    res.status(200).json({ success: true, product: updatedProduct });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
 export const getOneProduct = async (req, res) => {
   try {
     const productId = req.params.id;
@@ -182,58 +273,8 @@ export const getManyProducts = async (req, res) => {
   }
 };
 
-export const editProduct = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { name, price, description, categoryName } = req.body;
-    const sellerId = req.sellerId;
 
-    const product = await prisma.product.findUnique({
-      where: { id: parseInt(id, 10) },
-    });
 
-    if (!product) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Product not found" });
-    }
-
-    if (product.sellerId !== sellerId) {
-      return res.status(403).json({
-        success: false,
-        message: "You are not authorized to edit this product",
-      });
-    }
-    let category;
-    if (categoryName) {
-      category = await prisma.category.findUnique({
-        where: { name: categoryName },
-      });
-
-      if (!category) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Category not found" });
-      }
-    }
-
-    const updateData = {};
-    if (name) updateData.name = name;
-    if (price) updateData.price = parseInt(price);
-    if (description) updateData.description = description;
-    if (category) updateData.categoryId = category.id;
-
-    const updatedProduct = await prisma.product.update({
-      where: { id: parseInt(id, 10) },
-      data: updateData,
-    });
-
-    res.status(200).json({ success: true, product: updatedProduct });
-  } catch (error) {
-    console.log(error.message);
-    res.status(500).json({ success: false, message: "Internal server error" });
-  }
-};
 
 export const deleteProduct = async (req, res) => {
   try {
