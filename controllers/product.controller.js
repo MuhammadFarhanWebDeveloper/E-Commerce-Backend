@@ -10,7 +10,7 @@ export const uploadProduct = async (req, res) => {
 
   try {
     const sellerId = req.sellerId;
-    const { name, description, price, categoryName , stock} = req.body;
+    const { name, description, price, categoryName, stock = 0 } = req.body;
     const images = req.files;
 
     const seller = await prisma.seller.findUnique({ where: { id: sellerId } });
@@ -20,12 +20,21 @@ export const uploadProduct = async (req, res) => {
         .json({ success: false, message: "User not found as seller" });
     }
 
-    const category = await prisma.category.upsert({
+    const category = await prisma.category.findFirst({
       where: { name: categoryName },
-      update: {},
-      create: { name: categoryName },
     });
 
+    if (!category) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Category not found" });
+    }
+
+    if (images.length < 1) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Atleast one images is required" });
+    }
     const imageUrls = await Promise.all(
       images.map((file) =>
         cloudinary.uploader
@@ -45,7 +54,6 @@ export const uploadProduct = async (req, res) => {
       },
     });
 
-    
     await prisma.image.createMany({
       data: imageUrls.map((url) => ({
         url,
@@ -67,7 +75,6 @@ export const uploadProduct = async (req, res) => {
   }
 };
 
-
 export const editProduct = async (req, res) => {
   try {
     const { id } = req.params;
@@ -77,11 +84,13 @@ export const editProduct = async (req, res) => {
 
     const product = await prisma.product.findUnique({
       where: { id: parseInt(id, 10) },
-      include: { images: true }
+      include: { images: true },
     });
 
     if (!product) {
-      return res.status(404).json({ success: false, message: "Product not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
     }
 
     if (product.sellerId !== sellerId) {
@@ -98,7 +107,9 @@ export const editProduct = async (req, res) => {
       });
 
       if (!category) {
-        return res.status(404).json({ success: false, message: "Category not found" });
+        return res
+          .status(404)
+          .json({ success: false, message: "Category not found" });
       }
     }
 
@@ -109,9 +120,8 @@ export const editProduct = async (req, res) => {
     if (category) updateData.categoryId = category.id;
 
     if (newImages && newImages.length > 0) {
-      // Delete existing images from Cloudinary
       const oldImagePublicIds = product.images.map((image) => {
-        const publicId = image.url.split('/').pop().split('.')[0];
+        const publicId = image.url.split("/").pop().split(".")[0];
         return `products/${publicId}`;
       });
 
@@ -148,7 +158,7 @@ export const editProduct = async (req, res) => {
     const updatedProduct = await prisma.product.update({
       where: { id: parseInt(id, 10) },
       data: updateData,
-      include: { images: true }
+      include: { images: true },
     });
 
     res.status(200).json({ success: true, product: updatedProduct });
@@ -205,7 +215,6 @@ export const getManyProducts = async (req, res) => {
 
     const filters = {};
 
-    
     if (category) {
       filters.category = { name: category };
     }
@@ -220,13 +229,15 @@ export const getManyProducts = async (req, res) => {
       }));
     }
 
-    
     if (seller) {
       const sellerUser = await prisma.seller.findFirst({
         where: { id: parseInt(seller) },
       });
       if (!sellerUser) {
-        return res.status(404).json({success:false, message:"Can't find seller having this this id"})
+        return res.status(404).json({
+          success: false,
+          message: "Can't find seller having this this id",
+        });
       }
     }
 
@@ -234,7 +245,6 @@ export const getManyProducts = async (req, res) => {
       filters.sellerId = parseInt(seller);
     }
 
-    
     const products = await prisma.product.findMany({
       where: filters,
       include: {
@@ -249,14 +259,12 @@ export const getManyProducts = async (req, res) => {
       take: limitInt,
     });
 
-    
     const totalCount = await prisma.product.count({
       where: filters,
     });
 
     const totalPages = Math.ceil(totalCount / limitInt);
 
-    
     res.status(200).json({
       success: true,
       products,
@@ -273,15 +281,11 @@ export const getManyProducts = async (req, res) => {
   }
 };
 
-
-
-
 export const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
     const sellerId = req.sellerId;
 
-    
     const product = await prisma.product.findUnique({
       where: { id: parseInt(id, 10) },
       include: { images: true },
@@ -300,16 +304,14 @@ export const deleteProduct = async (req, res) => {
       });
     }
 
-    
     const deleteImagePromises = product.images.map(async (image) => {
-      const publicId = image.url.split("/").pop().split(".")[0]; 
-      await cloudinary.uploader.destroy(publicId); 
+      const publicId = image.url.split("/").slice(-2).join("/").split(".")[0];
+
+      await cloudinary.uploader.destroy(publicId);
     });
 
-    
     await Promise.all(deleteImagePromises);
 
-    
     const deletedProduct = await prisma.product.delete({
       where: { id: parseInt(id, 10) },
     });
@@ -325,7 +327,7 @@ export const deleteProduct = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Product not found" });
     }
-    console.error(error); 
+    console.error(error);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };

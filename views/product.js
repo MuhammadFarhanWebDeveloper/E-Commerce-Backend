@@ -13,10 +13,10 @@ import { isSeller } from "../middleware/isUserSeller.js";
 const router = express.Router();
 
 router.get("/get-many-poducts", getManyProducts);
-router.get("/get-one-poduct/:id", getOneProduct);
+router.get("/get-one-product/:id", getOneProduct);
 router.post("/add-product", isUserLoggedIn, isSeller, upload.array("images"), uploadProduct);
-router.put("/edit-product/:id", isUserLoggedIn, isSeller, editProduct);
-router.delete("/delete-product/:id", isUserLoggedIn, isSeller,upload.array("images"), deleteProduct);
+router.put("/edit-product/:id", isUserLoggedIn, isSeller,upload.array("images"), editProduct);
+router.delete("/delete-product/:id", isUserLoggedIn, isSeller, deleteProduct);
 
 router.post(
   "/upload-images/:productid",
