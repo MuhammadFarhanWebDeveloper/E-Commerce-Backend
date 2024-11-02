@@ -1,6 +1,8 @@
 import express from "express";
 import { body } from "express-validator";
 import isUserLoggedIn from "../middleware/isUserLoggedIn.js";
+import { isSeller } from "../middleware/isUserSeller.js";
+
 import {
   becomeSeller,
   deleteUser,
@@ -11,6 +13,7 @@ import {
   register,
   resetPassword,
   sendOTP,
+  updateSellerInfo,
   updateUserInfo,
   verifyOTP,
 } from "../controllers/auth.controller.js";
@@ -24,7 +27,7 @@ const registerFieldsValidation = [
   body("firstName")
     .isLength({ min: 4, max: 20 })
     .withMessage("First Name must be between 4 to 20 characters."),
-  
+
   body("lastName")
     .isLength({ min: 4, max: 20 })
     .withMessage("Last Name must be between 4 to 20 characters."),
@@ -33,21 +36,19 @@ const registerFieldsValidation = [
     .optional() // Make it optional to allow registration without this field
     .isBoolean()
     .withMessage("Admin must be a boolean (true or false)"),
-  
+
   body("isSeller")
     .optional() // Make it optional to allow registration without this field
     .isBoolean()
     .withMessage("Seller must be a boolean (true or false)"),
-  
+
   body("password")
     .isLength({ min: 4 })
     .withMessage("Password must be at least 4 characters long."),
 ];
 const loginFieldsValidation = [
-  body("email")
-    .isEmail()
-    .withMessage("Please enter a valid email address."),
-  
+  body("email").isEmail().withMessage("Please enter a valid email address."),
+
   body("password")
     .isLength({ min: 4 })
     .withMessage("Password must be at least 4 characters long."),
@@ -73,7 +74,6 @@ const userUpdateValidation = [
 ];
 const sendOTPValidation = [body("email", "Enter a valid email").isEmail()];
 
-
 router.post("/send-otp", sendOTPValidation, sendOTP);
 router.post("/verify-otp", isTokenSent, verifyOTP);
 router.post("/register", isTokenVerified, registerFieldsValidation, register);
@@ -83,9 +83,25 @@ router.post("/reset-password", resetPasswordToken, resetPassword);
 
 router.post("/logout", isUserLoggedIn, logout);
 router.post("/getuser", isUserLoggedIn, getUser);
-router.put("/update-user",isUserLoggedIn , upload.single("profilePicture"), updateUserInfo);
-router.post("/become-seller", isUserLoggedIn, upload.single("logo"), becomeSeller);
-
-router.delete('/delete-user', deleteUser);
+router.put(
+  "/update-user",
+  isUserLoggedIn,
+  upload.single("profilePicture"),
+  updateUserInfo
+);
+router.post(
+  "/become-seller",
+  isUserLoggedIn,
+  upload.single("logo"),
+  becomeSeller
+);
+router.put(
+  "/edit-shop-info",
+  isUserLoggedIn,
+  isSeller,
+  upload.single("logo"),
+  updateSellerInfo
+);
+router.delete("/delete-user", deleteUser);
 
 export default router;

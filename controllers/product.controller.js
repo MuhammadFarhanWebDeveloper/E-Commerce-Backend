@@ -10,7 +10,7 @@ export const uploadProduct = async (req, res) => {
 
   try {
     const sellerId = req.sellerId;
-    const { name, description, price, categoryName, stock = 0 } = req.body;
+    const { name, description, price, categoryName, stock = 1 } = req.body;
     const images = req.files;
 
     const seller = await prisma.seller.findUnique({ where: { id: sellerId } });
@@ -78,10 +78,10 @@ export const uploadProduct = async (req, res) => {
 export const editProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, price, description, categoryName } = req.body;
+    const { name, price, description, categoryName, stock } = req.body;
     const sellerId = req.sellerId;
-    const newImages = req.files;
-
+    const newImages = req.files || [];
+    const oldImages = JSON.parse(req.body.oldImages);
     const product = await prisma.product.findUnique({
       where: { id: parseInt(id, 10) },
       include: { images: true },
@@ -117,21 +117,22 @@ export const editProduct = async (req, res) => {
     if (name) updateData.name = name;
     if (price) updateData.price = parseInt(price);
     if (description) updateData.description = description;
+    if (stock) updateData.stock = parseInt(stock);
     if (category) updateData.categoryId = category.id;
 
-    if (newImages && newImages.length > 0) {
-      const oldImagePublicIds = product.images.map((image) => {
-        const publicId = image.url.split("/").pop().split(".")[0];
-        return `products/${publicId}`;
-      });
+    const oldImagePublicIds = product.images.map((image) => {
+      const publicId = image.url.split("/").pop().split(".")[0];
+      return `products/${publicId}`;
+    });
 
-      await Promise.all(
-        oldImagePublicIds.map((publicId) =>
-          cloudinary.uploader.destroy(publicId)
-        )
-      );
+    await Promise.all(
+      oldImagePublicIds.map((publicId) => cloudinary.uploader.destroy(publicId))
+    );
 
-      // Upload new images to Cloudinary
+    await prisma.image.deleteMany({
+      where: { productId: product.id },
+    });
+    if (newImages.length) {
       const newImageUrls = await Promise.all(
         newImages.map((file) =>
           cloudinary.uploader
@@ -140,15 +141,22 @@ export const editProduct = async (req, res) => {
         )
       );
 
-      // Delete old images from the database
-      await prisma.image.deleteMany({
-        where: { productId: product.id },
-      });
+      console.log(JSON.stringify(newImageUrls));
 
-      // Add the new images to the database
       await prisma.image.createMany({
         data: newImageUrls.map((url) => ({
           url,
+          productId: product.id,
+        })),
+      });
+    }
+
+    console.log("working");
+    console.log(JSON.stringify(oldImages));
+    if (oldImages.length) {
+      await prisma.image.createMany({
+        data: oldImages.map((image) => ({
+          url: image.url,
           productId: product.id,
         })),
       });
