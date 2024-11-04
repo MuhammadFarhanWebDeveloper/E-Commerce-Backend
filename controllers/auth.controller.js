@@ -193,7 +193,7 @@ export const login = async (req, res) => {
         secure: true,
         partitioned: true,
       })
-      .json({ success: true, userWithoutPassword });
+      .json({ success: true, user: userWithoutPassword });
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ success: false, message: "Internal server error" });
