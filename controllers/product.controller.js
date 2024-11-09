@@ -151,8 +151,7 @@ export const editProduct = async (req, res) => {
       });
     }
 
-    console.log("working");
-    console.log(JSON.stringify(oldImages));
+ 
     if (oldImages.length) {
       await prisma.image.createMany({
         data: oldImages.map((image) => ({
@@ -162,7 +161,7 @@ export const editProduct = async (req, res) => {
       });
     }
 
-    // Update the product information
+    
     const updatedProduct = await prisma.product.update({
       where: { id: parseInt(id, 10) },
       data: updateData,

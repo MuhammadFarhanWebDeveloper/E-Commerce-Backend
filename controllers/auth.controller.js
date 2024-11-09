@@ -348,6 +348,8 @@ export const getUser = async (req, res) => {
         isAdmin: true,
         profilePicture: true,
         createdAt: true,
+        phoneNumber: true,
+        address: true,
         updatedAt: true,
         seller: true,
       },
