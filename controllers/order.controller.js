@@ -1,3 +1,4 @@
+import sendOrderNotificationEmail from "../utils/orderNotificationEmail.js";
 import prisma from "../utils/db.config.js";
 
 export const buyProduct = async (req, res) => {
@@ -17,6 +18,13 @@ export const buyProduct = async (req, res) => {
 
     const product = await prisma.product.findUnique({
       where: { id: productId },
+      include: {
+        seller: {
+          include: {
+            user: true,
+          },
+        },
+      },
     });
 
     if (!product) {
@@ -31,8 +39,6 @@ export const buyProduct = async (req, res) => {
         .json({ success: false, message: "Not enough stock available" });
     }
 
-    const totalPrice = product.price * quantity;
-
     const user = await prisma.user.findUnique({
       where: { id: userId },
     });
@@ -43,19 +49,25 @@ export const buyProduct = async (req, res) => {
         .json({ success: false, message: "User not found" });
     }
 
-    const order = await prisma.order.create({
-      data: {
-        userId,
-        totalPrice,
-        productId,
-        quantity,
-      },
-    });
-
     await prisma.product.update({
       where: { id: productId },
       data: { stock: { decrement: quantity } },
     });
+
+    await sendOrderNotificationEmail(
+      product.seller.user.email,
+      {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        address: address,
+      },
+      {
+        name: product.name,
+        quantity: quantity,
+        price: product.price,
+      }
+    );
 
     res.status(200).json({ success: true, order });
   } catch (error) {
@@ -66,79 +78,3 @@ export const buyProduct = async (req, res) => {
     });
   }
 };
-
-export const getOrder = async (req, res) => {
-  const orderId = parseInt(req.params.id);
-  try {
-    const sellerId = req.sellerId;
-    const order = await prisma.order.findUnique({
-      where: { id: orderId },
-      include: {
-        seller: true,
-        product: true,
-      },
-    });
-    if (!order) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Order not found" });
-    }
-
-    if (order.seller.id != sellerId) {
-      return res.status(401).json({
-        success: false,
-        message: "You've no permission to get this order.",
-      });
-    }
-
-    res.status(200).json({ success: true, order: order });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      success: false,
-      message: error.message || "Internal Server Error",
-    });
-  }
-};
-
-export const getOrders = async (req, res) => {
-  try {
-    const sellerId = req.sellerId;
-    const orders = await prisma.order.findMany({
-      where: { sellerId: sellerId },
-    });
-
-    res.status(200).json({ success: true, orders: orders });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      success: false,
-      message: error.message || "Internal Server Error",
-    });
-  }
-};
-
-export const deleteOrder = async (req, res) => {
-  const orderId = parseInt(req.params.id);
-  const sellerId = req.sellerId;
-
-  try {
-    const order = await prisma.order.findFirst({
-      where: { id: orderId, sellerId },
-    });
-
-    if (!order) {
-      return res.status(404).json({ success: false, message: "Order not found" });
-    }
-
-    await prisma.order.delete({
-      where: { id: orderId },
-    });
-
-    res.status(200).json({ success: true, message: "Order deleted successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: error.message || "Internal Server Error" });
-  }
-};
-
