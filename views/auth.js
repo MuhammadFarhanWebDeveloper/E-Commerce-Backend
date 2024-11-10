@@ -33,12 +33,12 @@ const registerFieldsValidation = [
     .withMessage("Last Name must be between 4 to 20 characters."),
 
   body("isAdmin")
-    .optional() // Make it optional to allow registration without this field
+    .optional()
     .isBoolean()
     .withMessage("Admin must be a boolean (true or false)"),
 
   body("isSeller")
-    .optional() // Make it optional to allow registration without this field
+    .optional()
     .isBoolean()
     .withMessage("Seller must be a boolean (true or false)"),
 
@@ -72,7 +72,9 @@ const userUpdateValidation = [
     .isMobilePhone("any")
     .withMessage("Please provide a valid phone number."),
 ];
-const sendOTPValidation = [body("email", "Enter a valid email").isEmail()];
+const sendOTPValidation = [
+  body("email").isEmail().withMessage("Enter a valid email"),
+];
 
 router.post("/send-otp", sendOTPValidation, sendOTP);
 router.post("/verify-otp", isTokenSent, verifyOTP);

@@ -13,12 +13,7 @@ export const uploadProduct = async (req, res) => {
     const { name, description, price, categoryName, stock = 1 } = req.body;
     const images = req.files;
 
-    const seller = await prisma.seller.findUnique({ where: { id: sellerId } });
-    if (!seller) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found as seller" });
-    }
+
 
     const category = await prisma.category.findFirst({
       where: { name: categoryName },

@@ -37,7 +37,7 @@ app.use(express.json());
 app.use("/api/auth", auth);
 app.use("/api/product", product);
 app.use("/api/category", category);
-app.use("/api/order", order)
+app.use("/api/order", order);
 app.get("/", (req, res) => {
   res.json({ woring: true });
 });
