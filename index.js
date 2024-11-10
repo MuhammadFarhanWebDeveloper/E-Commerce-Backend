@@ -13,9 +13,7 @@ config({
   path: "./.env",
 });
 const allowedOrigins = [
-  "http://localhost:3000",
-  "http://localhost:4041",
-  "https://e-commerce-frontend-xi-seven.vercel.app",
+  process.env.FRONTEND_URL
 ];
 
 app.use(
