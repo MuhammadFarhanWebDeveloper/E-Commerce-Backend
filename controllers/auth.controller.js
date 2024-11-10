@@ -268,19 +268,19 @@ export const forgotPassword = async (req, res) => {
       payload,
       process.env.JWT_SECRET
     );
-    res.set("resetpasswordtoken", resetPassword);
-    res
-      .status(200)
-      .cookie("resetpasswordtoken", resetPasswordToken, {
-        maxAge: 15 * 60 * 1000,
-        sameSite: "none",
-        secure: true,
-      })
-      .json({
-        success: true,
-        message: "Password reset OTP sent to your email.",
-      });
+    res.status(200).cookie("resetpasswordtoken", resetPasswordToken, {
+      maxAge: 15 * 60 * 1000,
+      sameSite: "none",
+      secure: true,
+    });
+    res.set("resetpasswordtoken", resetPasswordToken);
+
+    res.json({
+      success: true,
+      message: "Password reset OTP sent to your email.",
+    });
   } catch (error) {
+    console.log(error);
     res.status(500).json({
       success: false,
       message: "An error occurred while processing the request.",
