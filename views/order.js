@@ -11,8 +11,8 @@ import {
 const order = express.Router();
 
 order.post("/buy/:id", isUserLoggedIn, buyProduct);
-order.post("/get-order/:id", isUserLoggedIn, isSeller, getOrder);
+order.get("/get-order/:id", isUserLoggedIn, isSeller, getOrder);
 order.delete("/delete/:id", isUserLoggedIn, isSeller, deleteOrder);
-order.post("/get-orders", isUserLoggedIn, isSeller, getOrders);
+order.get("/get-orders", isUserLoggedIn, isSeller, getOrders);
 
 export default order;
